@@ -2,6 +2,7 @@
   "expo": {
     "name": "reactnative-todo-app",
     "slug": "reactnative-todo-app",
+    "description": "Task management application that helps your daily life",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,9 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
