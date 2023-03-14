@@ -2,9 +2,11 @@ import { StyleSheet, Text, View } from "react-native";
 import CheckboxTask from "./CheckboxTask";
 
 export default function Task({ title = 'Undefined', items = [] }) {
-    console.log(title, items)
-    const ListTask = items.length > 0 ? (
-        items.map(item => {
+    const task = items === null ? [] : title === 'Incomplete' ? items.filter(item => !item.isFinish) : items.filter(item => item.isFinish)
+
+
+    const ListTask = task.length > 0 ? (
+        task.map(item => {
             return <CheckboxTask
                 key={item.id}
                 title={item.title}

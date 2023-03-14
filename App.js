@@ -4,10 +4,9 @@ import { StyleSheet, View, Pressable, TextInput, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useFonts } from 'expo-font'
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import MaterialsIcon from 'react-native-vector-icons/MaterialIcons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { v4 as uuidv4, validate } from 'uuid'
 import * as SplashScreen from 'expo-splash-screen';
 import Header from './components/Header';
 import Task from './components/Task';
@@ -25,25 +24,30 @@ export default function App() {
   const [modalVisible, setModalVisible] = useState(false)
   const [category, setCategory] = useState(null)
   const [nameTask, setNameTask] = useState(null)
-  const [completed, setCompleted] = useState([])
-  const [incomplete, setIncomplete] = useState([])
+  const [tasks, setTask] = useState([])
 
   const closeModal = () => {
     setModalVisible(false)
   }
 
-  let data = []
 
-  const addTask = () => {
-    const task = {
-      id: uuidv4(),
-      title: nameTask,
-      category: category,
-      isFinish: false,
-    }
+  const addTask = async () => {
 
-    if (data.length === 0) {
-      AsyncStorage.setItem('task', JSON.stringify([task]))
+    try {
+      const { v4: uuidv4 } = require('uuid');
+      const task = {
+        id: uuidv4(),
+        title: nameTask,
+        category: category,
+        isFinish: false,
+      }
+      if (tasks.length === 0) {
+        await AsyncStorage.setItem('task', JSON.stringify([task]))
+      } else {
+        await AsyncStorage.setItem('task', JSON.stringify(tasks.concat(task)))
+      }
+    } catch (e) {
+      alert('Error while add task: ' + e)
     }
 
     setCategory(null)
@@ -53,22 +57,12 @@ export default function App() {
 
   const getTask = async () => {
     try {
-      const value = await AsyncStorage.getItem('task')
+      let value = await AsyncStorage.getItem('task')
 
       if (value) {
-        data = JSON.parse(value)
-
-        console.log(data)
-
-        const dataIncomplete = data.length > 0 ? data.filter(tasku => !tasku.isFinish) : []
-
-        // setIncomplete(dataIncomplete)
-        // setCompleted(data.length > 0 ? data.filter(tasku => !tasku.isFinish) : [])
+        value = JSON.parse(value)
       }
-
-
-      console.log(incomplete)
-      console.log(completed)
+      setTask(value)
     } catch (e) {
       alert(e)
       console.log(e)
@@ -92,9 +86,9 @@ export default function App() {
   return (
     <SafeAreaView onLayout={onLayoutRootView}>
       <View style={styles.container}>
-        <Header lengthCompleted={completed} lengthIncomplete={incomplete} />
-        <Task title='Incomplete' items={data} />
-        <Task title='Completed' items={data} />
+        <Header />
+        <Task title='Incomplete' items={tasks} />
+        <Task title='Completed' items={tasks} />
         <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
           <MaterialsIcon name='add' color='white' size={30} />
         </Pressable>
@@ -111,7 +105,7 @@ export default function App() {
               autoFocus
             />
             <View style={styles.inputPicker}>
-              <Picker placeholder='Category' selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)}>
+              <Picker placeholder='Category' selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)} re>
                 <Picker.Item label='Category' value='category' enabled={false} fontFamily='Inter-Bold' style={{ fontSize: 14, }} />
                 <Picker.Item label='Finance' value='finance' style={{ fontFamily: 'Inter-SemiBold', fontSize: 14, }} />
                 <Picker.Item label='Wedding' value='wedding' style={{ fontFamily: 'Inter-SemiBold', fontSize: 14, }} />
