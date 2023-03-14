@@ -1,10 +1,11 @@
 import 'react-native-get-random-values'
+import uuid from 'react-native-uuid';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, Pressable, TextInput, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useFonts } from 'expo-font'
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import MaterialsIcon from 'react-native-vector-icons/MaterialIcons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
@@ -25,6 +26,7 @@ export default function App() {
   const [category, setCategory] = useState(null)
   const [nameTask, setNameTask] = useState(null)
   const [tasks, setTask] = useState([])
+  const [selectedTask, setSelectedTask] = useState()
 
   const closeModal = () => {
     setModalVisible(false)
@@ -34,9 +36,8 @@ export default function App() {
   const addTask = async () => {
 
     try {
-      const { v4: uuidv4 } = require('uuid');
       const task = {
-        id: uuidv4(),
+        id: uuid.v4(),
         title: nameTask,
         category: category,
         isFinish: false,
@@ -69,11 +70,36 @@ export default function App() {
     }
   }
 
+  const updateData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('task')
+      const dataParse = JSON.parse(data)
+
+      const updateData = dataParse.map(item => {
+        if (item.title === selectedTask.title) {
+          return {
+            ...item,
+            isFinish: !item.isFinish
+          }
+        }
+
+        return item
+      })
+
+      setSelectedTask()
+
+      await AsyncStorage.setItem('task', JSON.stringify(updateData))
+      setTask(updateData)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
     }
-
+    console.log('berubah')
     getTask()
   }, [fontsLoaded]);
 
@@ -81,14 +107,16 @@ export default function App() {
     return null;
   }
 
-
+  if (!!selectedTask) {
+    updateData()
+  }
 
   return (
     <SafeAreaView onLayout={onLayoutRootView}>
       <View style={styles.container}>
         <Header />
-        <Task title='Incomplete' items={tasks} />
-        <Task title='Completed' items={tasks} />
+        <Task title='Incomplete' items={tasks} setSelectedTask={setSelectedTask} />
+        <Task title='Completed' items={tasks} setSelectedTask={setSelectedTask} />
         <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
           <MaterialsIcon name='add' color='white' size={30} />
         </Pressable>

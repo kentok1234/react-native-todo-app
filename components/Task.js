@@ -1,10 +1,9 @@
+
 import { StyleSheet, Text, View } from "react-native";
 import CheckboxTask from "./CheckboxTask";
 
-export default function Task({ title = 'Undefined', items = [] }) {
+export default function Task({ title = 'Undefined', items = [], setSelectedTask }) {
     const task = items === null ? [] : title === 'Incomplete' ? items.filter(item => !item.isFinish) : items.filter(item => item.isFinish)
-
-
     const ListTask = task.length > 0 ? (
         task.map(item => {
             return <CheckboxTask
@@ -12,6 +11,7 @@ export default function Task({ title = 'Undefined', items = [] }) {
                 title={item.title}
                 category={item.category}
                 isFinish={item.isFinish}
+                onSelect={setSelectedTask}
             />
         })
     ) : null

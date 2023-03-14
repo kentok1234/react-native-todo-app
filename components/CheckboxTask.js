@@ -3,37 +3,18 @@ import Checkbox from "expo-checkbox"
 import { useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function CheckboxTask({ title, category, isFinish }) {
+export default function CheckboxTask({ title, category, isFinish, onSelect }) {
 
     const [isCheked, setChecked] = useState(isFinish)
 
-    const changeCheck = async (value) => {
-        try {
-            const data = await AsyncStorage.getItem('task')
-            const dataParse = JSON.parse(data)
-
-            const updateData = dataParse.map(item => {
-                if (item.title === title) {
-                    return {
-                        ...item,
-                        isFinish: value
-                    }
-                }
-
-                return item
-            })
-
-            setChecked(value)
-
-            await AsyncStorage.setItem('task', JSON.stringify(updateData))
-        } catch (e) {
-            console.log(e)
-        }
+    const onCheck = (value) => {
+        onSelect({ title, category, isFinish: value })
+        setChecked(value)
     }
 
     return (
         <View style={styles.container}>
-            <Checkbox value={isCheked} onValueChange={changeCheck} style={styles.checkbox} />
+            <Checkbox value={isCheked} onValueChange={onCheck} style={styles.checkbox} />
             <View>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.category}>{category}</Text>
