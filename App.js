@@ -1,17 +1,19 @@
 import 'react-native-get-random-values'
 import uuid from 'react-native-uuid';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Pressable, TextInput, Text } from 'react-native';
+import { StyleSheet, View, Pressable, TextInput, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { useFonts } from 'expo-font'
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState } from 'react';
+import { FlashList } from '@shopify/flash-list'
 import MaterialsIcon from 'react-native-vector-icons/MaterialIcons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
 import Header from './components/Header';
 import Task from './components/Task';
 import ModalTask from './components/ModalTask';
+import CheckboxTask from './components/CheckboxTask';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,6 +32,34 @@ export default function App() {
 
   const closeModal = () => {
     setModalVisible(false)
+  }
+
+  const renderItemsIncomplete = ({ item }) => {
+
+    return (
+      <View>
+        <CheckboxTask
+          key={item.id}
+          title={item.title}
+          category={item.category}
+          isFinish={item.isFinish}
+          onSelect={setSelectedTask}
+        />
+      </View>
+    )
+  }
+  const renderItemsCompleted = ({ item }) => {
+    return (
+      <View>
+        <CheckboxTask
+          key={item.id}
+          title={item.title}
+          category={item.category}
+          isFinish={item.isFinish}
+          onSelect={setSelectedTask}
+        />
+      </View>
+    )
   }
 
 
@@ -59,11 +89,10 @@ export default function App() {
   const getTask = async () => {
     try {
       let value = await AsyncStorage.getItem('task')
-
       if (value) {
         value = JSON.parse(value)
+        setTask(value)
       }
-      setTask(value)
     } catch (e) {
       alert(e)
       console.log(e)
@@ -115,12 +144,34 @@ export default function App() {
     <SafeAreaView onLayout={onLayoutRootView}>
       <View style={styles.container}>
         <Header />
-        <Task title='Incomplete' items={tasks} setSelectedTask={setSelectedTask} />
-        <Task title='Completed' items={tasks} setSelectedTask={setSelectedTask} />
-        <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
-          <MaterialsIcon name='add' color='white' size={30} />
-        </Pressable>
+        <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
+
+          <Task title='Incomplete' setSelectedTask={setSelectedTask}>
+            <FlashList
+              data={tasks.filter(taskIncom => !taskIncom.isFinish)}
+              renderItem={renderItemsIncomplete}
+              ListEmptyComponent={() => (
+                <Text style={{ color: '#DADADA', fontSize: 18, fontFamily: 'Inter-Medium' }}>There is no task.</Text>
+              )}
+              estimatedItemSize={5}
+            />
+          </Task>
+          <Task title='Completed' setSelectedTask={setSelectedTask}>
+            <FlashList
+              data={tasks.filter(taskComp => taskComp.isFinish)}
+              renderItem={renderItemsCompleted}
+              ListEmptyComponent={() => (
+                <Text style={{ color: '#DADADA', fontSize: 18, fontFamily: 'Inter-Medium' }}>There is no task.</Text>
+              )}
+              estimatedItemSize={5}
+            />
+          </Task>
+
+        </ScrollView>
       </View>
+      <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
+        <MaterialsIcon name='add' color='white' size={30} />
+      </Pressable>
       <ModalTask isVisible={modalVisible} onClose={closeModal} title='Add Task'>
         <View style={styles.modalContainer}>
           <View style={styles.inputContainer}>
