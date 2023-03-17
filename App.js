@@ -128,7 +128,6 @@ export default function App() {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
     }
-    console.log('berubah')
     getTask()
   }, [fontsLoaded]);
 
@@ -140,10 +139,13 @@ export default function App() {
     updateData()
   }
 
+  const lengthIncomplete = tasks.filter(task => !task.isFinish).length
+  const lengthCompleted = tasks.filter(task => task.isFinish).length
+
   return (
     <SafeAreaView onLayout={onLayoutRootView}>
       <View style={styles.container}>
-        <Header />
+        <Header lengthIncomplete={lengthIncomplete} lengthCompleted={lengthCompleted} />
         <ScrollView showsHorizontalScrollIndicator={false} showsVerticalScrollIndicator={false}>
 
           <Task title='Incomplete' setSelectedTask={setSelectedTask}>
