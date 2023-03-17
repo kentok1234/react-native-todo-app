@@ -40,6 +40,7 @@ export default function App() {
       <View>
         <CheckboxTask
           key={item.id}
+          id={item.id}
           title={item.title}
           category={item.category}
           isFinish={item.isFinish}
@@ -53,6 +54,7 @@ export default function App() {
       <View>
         <CheckboxTask
           key={item.id}
+          id={item.id}
           title={item.title}
           category={item.category}
           isFinish={item.isFinish}
@@ -124,6 +126,20 @@ export default function App() {
     }
   }
 
+  const deleteData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('task')
+      const dataParse = JSON.parse(data)
+
+      const updateData = dataParse.filter(item => item.id !== selectedTask.id)
+      setSelectedTask()
+      await AsyncStorage.setItem('task', JSON.stringify(updateData))
+      setTask(updateData)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const onLayoutRootView = useCallback(async () => {
     if (fontsLoaded) {
       await SplashScreen.hideAsync();
@@ -136,7 +152,11 @@ export default function App() {
   }
 
   if (!!selectedTask) {
-    updateData()
+    if (selectedTask.action === 'update') {
+      updateData()
+    } else {
+      deleteData()
+    }
   }
 
   const lengthIncomplete = tasks.filter(task => !task.isFinish).length
@@ -216,7 +236,7 @@ const styles = StyleSheet.create({
     borderColor: '#515CC6',
     borderWidth: 2,
     borderRadius: 28,
-    bottom: 30,
+    top: 60,
     height: 56,
     justifyContent: 'center',
     width: 56,

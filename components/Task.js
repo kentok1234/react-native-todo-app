@@ -25,8 +25,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     taskContainer: {
-        gap: 10,
-        flex: 1,
         minHeight: 100
     }
 })
