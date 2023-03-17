@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "reactnative-todo-app",
-    "slug": "reactnative-todo-app",
+    "name": "Todo List",
+    "slug": "Todo List",
     "description": "Task management application that helps your daily life",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#000000"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
