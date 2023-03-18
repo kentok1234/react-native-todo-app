@@ -31,6 +31,8 @@ export default function App() {
   const [selectedTask, setSelectedTask] = useState()
 
   const closeModal = () => {
+    setNameTask(null)
+    setCategory(null)
     setModalVisible(false)
   }
 
@@ -86,6 +88,8 @@ export default function App() {
     setCategory(null)
     setNameTask(null)
     setModalVisible(false)
+
+    getTask()
   }
 
   const getTask = async () => {
