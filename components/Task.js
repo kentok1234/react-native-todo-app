@@ -1,8 +1,8 @@
 
+import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 export default function Task({ title = 'Undefined', children }) {
-
     return (
         <View style={styles.container}>
             <Text style={styles.title}>{title}</Text>

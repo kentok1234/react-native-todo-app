@@ -1,11 +1,8 @@
-import 'react-native-get-random-values'
-import uuid from 'react-native-uuid';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, Pressable, TextInput, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Pressable, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
 import { useFonts } from 'expo-font'
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlashList } from '@shopify/flash-list'
 import MaterialsIcon from 'react-native-vector-icons/MaterialIcons'
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -14,6 +11,7 @@ import Header from './components/Header';
 import Task from './components/Task';
 import ModalTask from './components/ModalTask';
 import CheckboxTask from './components/CheckboxTask';
+import { ModalAddTask } from './components/ModalAddTask';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,72 +23,65 @@ export default function App() {
   })
 
   const [modalVisible, setModalVisible] = useState(false)
-  const [category, setCategory] = useState(null)
-  const [nameTask, setNameTask] = useState(null)
   const [tasks, setTask] = useState([])
   const [selectedTask, setSelectedTask] = useState()
 
-  const closeModal = () => {
-    setNameTask(null)
-    setCategory(null)
-    setModalVisible(false)
-  }
+  useEffect(() => {
 
-  const renderItemsIncomplete = ({ item }) => {
-
-    return (
-      <View>
-        <CheckboxTask
-          key={item.id}
-          id={item.id}
-          title={item.title}
-          category={item.category}
-          isFinish={item.isFinish}
-          onSelect={setSelectedTask}
-        />
-      </View>
-    )
-  }
-  const renderItemsCompleted = ({ item }) => {
-    return (
-      <View>
-        <CheckboxTask
-          key={item.id}
-          id={item.id}
-          title={item.title}
-          category={item.category}
-          isFinish={item.isFinish}
-          onSelect={setSelectedTask}
-        />
-      </View>
-    )
-  }
-
-
-  const addTask = async () => {
-
-    try {
-      const task = {
-        id: uuid.v4(),
-        title: nameTask,
-        category: category,
-        isFinish: false,
-      }
-      if (tasks.length === 0) {
-        await AsyncStorage.setItem('task', JSON.stringify([task]))
+    if (!!selectedTask) {
+      if (selectedTask.action === 'update') {
+        updateData()
       } else {
-        await AsyncStorage.setItem('task', JSON.stringify(tasks.concat(task)))
+        deleteData()
       }
-    } catch (e) {
-      alert('Error while add task: ' + e)
     }
+  }, [selectedTask])
 
-    setCategory(null)
-    setNameTask(null)
+  const lengthIncomplete = useMemo(() => {
+    return tasks.filter(task => !task.isFinish).length
+  }, [tasks])
+
+  const lengthCompleted = useMemo(() => {
+    return tasks.filter(task => task.isFinish).length
+  }, [tasks])
+
+  const closeModal = useCallback(() => {
     setModalVisible(false)
+  }, [modalVisible])
 
-    getTask()
-  }
+  const openModal = useCallback(() => {
+    setModalVisible(true)
+  }, [modalVisible])
+
+  const renderItemsIncomplete = useCallback(({ item }) => {
+
+    return (
+      <View>
+        <CheckboxTask
+          key={item.id}
+          id={item.id}
+          title={item.title}
+          category={item.category}
+          isFinish={item.isFinish}
+          onSelect={setSelectedTask}
+        />
+      </View>
+    )
+  }, [tasks])
+  const renderItemsCompleted = useCallback(({ item }) => {
+    return (
+      <View>
+        <CheckboxTask
+          key={item.id}
+          id={item.id}
+          title={item.title}
+          category={item.category}
+          isFinish={item.isFinish}
+          onSelect={setSelectedTask}
+        />
+      </View>
+    )
+  }, [tasks])
 
   const getTask = async () => {
     try {
@@ -101,7 +92,6 @@ export default function App() {
       }
     } catch (e) {
       alert(e)
-      console.log(e)
     }
   }
 
@@ -155,17 +145,6 @@ export default function App() {
     return null;
   }
 
-  if (!!selectedTask) {
-    if (selectedTask.action === 'update') {
-      updateData()
-    } else {
-      deleteData()
-    }
-  }
-
-  const lengthIncomplete = tasks.filter(task => !task.isFinish).length
-  const lengthCompleted = tasks.filter(task => task.isFinish).length
-
   return (
     <SafeAreaView onLayout={onLayoutRootView}>
       <View style={styles.container}>
@@ -195,33 +174,11 @@ export default function App() {
 
         </ScrollView>
       </View>
-      <Pressable style={styles.button} onPress={() => setModalVisible(true)}>
+      <Pressable style={styles.button} onPress={openModal}>
         <MaterialsIcon name='add' color='white' size={30} />
       </Pressable>
       <ModalTask isVisible={modalVisible} onClose={closeModal} title='Add Task'>
-        <View style={styles.modalContainer}>
-          <View style={styles.inputContainer}>
-            <TextInput
-              placeholder='Task'
-              keyboardType='ascii-capable'
-              style={styles.input}
-              value={nameTask}
-              onChangeText={setNameTask}
-              autoFocus
-            />
-            <View style={styles.inputPicker}>
-              <Picker placeholder='Category' selectedValue={category} onValueChange={(itemValue) => setCategory(itemValue)} re>
-                <Picker.Item label='Category' value='category' enabled={false} fontFamily='Inter-Bold' style={{ fontSize: 14, }} />
-                <Picker.Item label='Finance' value='finance' style={{ fontFamily: 'Inter-SemiBold', fontSize: 14, }} />
-                <Picker.Item label='Wedding' value='wedding' style={{ fontFamily: 'Inter-SemiBold', fontSize: 14, }} />
-                <Picker.Item label='Other' value='other' style={{ fontFamily: 'Inter-SemiBold', fontSize: 14, }} />
-              </Picker>
-            </View>
-          </View>
-          <Pressable style={[nameTask && category ? styles.buttonModalValid : styles.buttonModalNotValid]} onPress={addTask} disabled={(!nameTask || !category)}>
-            <Text style={{ color: 'white', fontFamily: 'Inter-SemiBold' }}>Add</Text>
-          </Pressable>
-        </View>
+        <ModalAddTask tasks={tasks} onClose={setModalVisible} />
       </ModalTask>
       <StatusBar style='auto' />
     </SafeAreaView>
@@ -247,36 +204,4 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 30,
   },
-  modalContainer: {
-    marginTop: 20,
-    marginBottom: 40,
-    flex: 1,
-  },
-  input: {
-    borderRadius: 6,
-    backgroundColor: '#fff',
-    padding: 6,
-  },
-  inputPicker: {
-    borderRadius: 6,
-    backgroundColor: '#fff',
-  },
-  buttonModalValid: {
-    backgroundColor: '#473FA0',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 8,
-  },
-  buttonModalNotValid: {
-    backgroundColor: '#6D68A1',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 8,
-  },
-  inputContainer: {
-    gap: 10,
-    flex: 1,
-  }
 });
